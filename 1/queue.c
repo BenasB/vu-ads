@@ -1,3 +1,5 @@
+// 2110541
+
 #include <stdlib.h>
 #include "queue.h"
 
@@ -38,7 +40,7 @@ void *dequeue(Queue *queue)
     QueueNode *oldHead = queue->head;
     queue->head = queue->head->next;
 
-    if (queue->head == NULL)
+    if (queue->head == NULL) // Removed the last item
         queue->tail = NULL;
 
     void *data = oldHead->data;
@@ -46,4 +48,33 @@ void *dequeue(Queue *queue)
     free(oldHead);
 
     return data;
+}
+
+void *peek(Queue queue)
+{
+    if (is_empty(queue))
+        return NULL;
+
+    return queue.head->data;
+}
+
+int size(Queue queue)
+{
+    int size = 0;
+    QueueNode *node = queue.head;
+    while (node != NULL)
+    {
+        size++;
+        node = node->next;
+    }
+
+    return size;
+}
+
+void queue_clear(Queue *queue)
+{
+    while (!is_empty(*queue))
+    {
+        dequeue(queue);
+    }
 }

@@ -6,7 +6,7 @@
 typedef struct QueueNode QueueNode;
 typedef struct Queue Queue;
 
-struct QueueNode
+struct QueueNode // Allocated dynamically
 {
     void *data; // For generic data
     QueueNode *next;
@@ -24,6 +24,6 @@ void enqueue(Queue *queue, void *data);
 void *dequeue(Queue *queue);
 void *peek(Queue queue);
 int size(Queue queue);
-void queue_delete(Queue *queue);
+void queue_clear(Queue *queue);
 
 #endif
