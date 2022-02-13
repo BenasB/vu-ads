@@ -18,12 +18,12 @@ struct Queue
     QueueNode *tail;
 };
 
-Queue *queue_new();
-bool isEmpty(Queue queue);
-void enqueue(void *data);
-void dequeue(void *data);
-void peek(Queue queue);
-unsigned int size(Queue queue);
-void queue_delete(Queue queue);
+Queue queue_new();
+bool is_empty(Queue queue);
+void enqueue(Queue *queue, void *data);
+void *dequeue(Queue *queue);
+void *peek(Queue queue);
+int size(Queue queue);
+void queue_delete(Queue *queue);
 
 #endif
