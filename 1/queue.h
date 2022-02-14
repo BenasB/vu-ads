@@ -16,14 +16,14 @@ struct Queue
 {
     QueueNode *head;
     QueueNode *tail;
+    int size;
 };
 
 Queue queue_new();
 bool is_empty(Queue queue);
-void enqueue(Queue *queue, void *data);
-void *dequeue(Queue *queue);
-void *peek(Queue queue);
-int size(Queue queue);
+void *enqueue(Queue *queue, void *data); // Returns NULL if failed, void *data otherwise
+void *dequeue(Queue *queue);             // Returns NULL if failed, void *data otherwise
+void *peek(Queue queue);                 // Returns NULL if failed, void *data otherwise
 void queue_clear(Queue *queue);
 
 #endif

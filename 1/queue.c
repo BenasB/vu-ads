@@ -5,20 +5,25 @@
 
 Queue queue_new()
 {
-    Queue newQueue = {NULL, NULL};
+    Queue newQueue = {NULL, NULL, 0};
     return newQueue;
 }
 
 bool is_empty(Queue queue)
 {
-    return queue.head == NULL;
+    return queue.size == 0;
 }
 
-void enqueue(Queue *queue, void *data)
+void *enqueue(Queue *queue, void *data)
 {
     QueueNode *newTail = malloc(sizeof(QueueNode));
+
+    if (newTail == NULL)
+        return NULL;
+
     newTail->data = data;
     newTail->next = NULL;
+    queue->size++;
 
     if (queue->tail == NULL)
     {
@@ -30,6 +35,8 @@ void enqueue(Queue *queue, void *data)
         queue->tail->next = newTail;
         queue->tail = newTail;
     }
+
+    return data;
 }
 
 void *dequeue(Queue *queue)
@@ -39,6 +46,8 @@ void *dequeue(Queue *queue)
 
     QueueNode *oldHead = queue->head;
     queue->head = queue->head->next;
+
+    queue->size--;
 
     if (queue->head == NULL) // Removed the last item
         queue->tail = NULL;
@@ -56,19 +65,6 @@ void *peek(Queue queue)
         return NULL;
 
     return queue.head->data;
-}
-
-int size(Queue queue)
-{
-    int size = 0;
-    QueueNode *node = queue.head;
-    while (node != NULL)
-    {
-        size++;
-        node = node->next;
-    }
-
-    return size;
 }
 
 void queue_clear(Queue *queue)
