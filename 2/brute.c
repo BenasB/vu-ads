@@ -65,35 +65,40 @@ void placeKnights(Board *board,
 }
 
 int main () {
+    Board board;
+    unsigned long long tries = 0;
     
     for (int k1 = 0; k1 < BOARD_SIZE*BOARD_SIZE; k1++)
     {
-        for (int k2 = k1+1; k2 < BOARD_SIZE*BOARD_SIZE; k2++)
+        for (int k2 = 0; k2 < BOARD_SIZE*BOARD_SIZE; k2++)
         {
-            for (int k3 = k2+1; k3 < BOARD_SIZE*BOARD_SIZE; k3++)
+            for (int k3 = 0; k3 < BOARD_SIZE*BOARD_SIZE; k3++)
             {
-                for (int k4 = k3+1; k4 < BOARD_SIZE*BOARD_SIZE; k4++)
+                for (int k4 = 0; k4 < BOARD_SIZE*BOARD_SIZE; k4++)
                 {
-                    for (int k5 = k4+1; k5 < BOARD_SIZE*BOARD_SIZE; k5++)
+                    for (int k5 = 0; k5 < BOARD_SIZE*BOARD_SIZE; k5++)
                     {
-                        for (int k6 = k5+1; k6 < BOARD_SIZE*BOARD_SIZE; k6++)
+                        for (int k6 = 0; k6 < BOARD_SIZE*BOARD_SIZE; k6++)
                         {
-                            for (int k7 = k6+1; k7 < BOARD_SIZE*BOARD_SIZE; k7++)
+                            for (int k7 = 0; k7 < BOARD_SIZE*BOARD_SIZE; k7++)
                             {
-                                for (int k8 = k7+1; k8 < BOARD_SIZE*BOARD_SIZE; k8++)
+                                for (int k8 = 0; k8 < BOARD_SIZE*BOARD_SIZE; k8++)
                                 {
-                                    for (int k9 = k8+1; k9 < BOARD_SIZE*BOARD_SIZE; k9++)
+                                    for (int k9 = 0; k9 < BOARD_SIZE*BOARD_SIZE; k9++)
                                     {
-                                        for (int k10 = k9+1; k10 < BOARD_SIZE*BOARD_SIZE; k10++)
+                                        for (int k10 = 0; k10 < BOARD_SIZE*BOARD_SIZE; k10++)
                                         {
-                                            for (int k11 = k10+1; k11 < BOARD_SIZE*BOARD_SIZE; k11++)
+                                            for (int k11 = 0; k11 < BOARD_SIZE*BOARD_SIZE; k11++)
                                             {
-                                                for (int k12 = k11+1; k12 < BOARD_SIZE*BOARD_SIZE; k12++)
+                                                for (int k12 = 0; k12 < BOARD_SIZE*BOARD_SIZE; k12++)
                                                 {
-                                                    Board board;
+                                                    tries++;
                                                     memset(board, 0, BOARD_SIZE * BOARD_SIZE * sizeof(char));
                                                     placeKnights(&board, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12);
                                                     if (checkBoard(board)) printBoard(board);
+
+                                                    if (tries % 10000000 == 0) // Print every million tries
+                                                    printf("Tries: %llu\n", tries);
                                                 }
                                             }
                                         }
