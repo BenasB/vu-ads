@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 
 #define BOARD_SIZE 8
 #define EMPTY_TILE 0
@@ -136,6 +137,9 @@ void backtrack(Board *board, Board attackMap, int *knightCount){
 }
 
 int main(){
+    clock_t t;
+    t = clock();
+
     Board attackMap;
     memset(attackMap, 0, BOARD_SIZE*BOARD_SIZE*sizeof(char));
     generateAttackMap(&attackMap);
@@ -143,4 +147,8 @@ int main(){
     memset(board, 0, BOARD_SIZE*BOARD_SIZE*sizeof(char));
     int knightCount = 0;
     backtrack(&board, attackMap, &knightCount);
+
+    t = clock() - t;
+    double time_taken = ((double)t)/CLOCKS_PER_SEC;
+    printf("The program took %f seconds to execute\n", time_taken);
 }
