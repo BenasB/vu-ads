@@ -96,8 +96,6 @@ bool checkBoard(Board board){
     return true;
 }
 
-unsigned long long combs = 0;
-
 void backtrack(Board *board, Board attackMap, int *knightCount){
     Tile lowestTile = getLowestAttackabilityTile(*board, attackMap);
     for(int dx = -2; dx <= 2; dx++)
@@ -107,7 +105,6 @@ void backtrack(Board *board, Board attackMap, int *knightCount){
             if((dx*dx + dy*dy) == 5) 
             {
                 if (inBoard(lowestTile.i+dx, lowestTile.j+dy)){
-                    combs++;
                     Board boardState;
                     memcpy(&boardState, board, BOARD_SIZE*BOARD_SIZE*sizeof(char));
 
@@ -146,5 +143,4 @@ int main(){
     memset(board, 0, BOARD_SIZE*BOARD_SIZE*sizeof(char));
     int knightCount = 0;
     backtrack(&board, attackMap, &knightCount);
-    printf("COMBS: %llu\n", combs);
 }
