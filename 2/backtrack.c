@@ -53,7 +53,7 @@ void generateAttackMap(Board *board){
 
 Tile getLowestAttackabilityTile(Board board, Board attackMap){
     Tile tile;
-    int lowest = 0xFFFF;
+    int lowest = 0xFFFF; // Some big number
     for (int i = 0; i < BOARD_SIZE; i++)
     {
         for (int j = 0; j < BOARD_SIZE; j++)
@@ -96,6 +96,8 @@ bool checkBoard(Board board){
     return true;
 }
 
+unsigned long long combs = 0;
+
 void backtrack(Board *board, Board attackMap, int *knightCount){
     Tile lowestTile = getLowestAttackabilityTile(*board, attackMap);
     for(int dx = -2; dx <= 2; dx++)
@@ -105,6 +107,7 @@ void backtrack(Board *board, Board attackMap, int *knightCount){
             if((dx*dx + dy*dy) == 5) 
             {
                 if (inBoard(lowestTile.i+dx, lowestTile.j+dy)){
+                    combs++;
                     Board boardState;
                     memcpy(&boardState, board, BOARD_SIZE*BOARD_SIZE*sizeof(char));
 
@@ -121,6 +124,7 @@ void backtrack(Board *board, Board attackMap, int *knightCount){
                         memcpy(board, &boardState, BOARD_SIZE*BOARD_SIZE*sizeof(char));
                         (*knightCount)--;
 
+                        // Don't move deeper into the backtracking tree, since we're out of knights
                         continue;
                     }
 
@@ -142,4 +146,5 @@ int main(){
     memset(board, 0, BOARD_SIZE*BOARD_SIZE*sizeof(char));
     int knightCount = 0;
     backtrack(&board, attackMap, &knightCount);
+    printf("COMBS: %llu\n", combs);
 }
