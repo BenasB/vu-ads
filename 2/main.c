@@ -6,6 +6,8 @@
 #define EMPTY_TILE 0
 #define ATTACKED_TILE 1
 #define KNIGHT_TILE 2
+#define MAX_KNIGHTS 12
+
 typedef char Board[BOARD_SIZE][BOARD_SIZE];
 
 struct Tile
@@ -68,14 +70,76 @@ Tile getLowestAttackabilityTile(Board board, Board attackMap){
     return tile;
 }
 
+void placeKnight(Board *board, Tile tile){
+    (*board)[tile.i][tile.j] = KNIGHT_TILE;
+    for(int dx = -2; dx <= 2; dx++)
+    {
+        for(int dy = -2; dy <= 2; dy++)
+        {
+            if((dx*dx + dy*dy) == 5)
+            {
+                if (inBoard(tile.i+dx, tile.j+dy) && (*board)[tile.i+dx][tile.j+dy] != KNIGHT_TILE)
+                    (*board)[tile.i+dx][tile.j+dy] = ATTACKED_TILE;
+            }
+        }
+    }
+}
+
+bool checkBoard(Board board){
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        for (int j = 0; j < BOARD_SIZE; j++)
+        {
+            if (board[i][j] == 0) return false;
+        }
+    }
+    return true;
+}
+
+void backtrack(Board *board, Board attackMap, int *knightCount){
+    Tile lowestTile = getLowestAttackabilityTile(*board, attackMap);
+    for(int dx = -2; dx <= 2; dx++)
+    {
+        for(int dy = -2; dy <= 2; dy++)
+        {
+            if((dx*dx + dy*dy) == 5) 
+            {
+                if (inBoard(lowestTile.i+dx, lowestTile.j+dy)){
+                    Board boardState;
+                    memcpy(&boardState, board, BOARD_SIZE*BOARD_SIZE*sizeof(char));
+
+                    Tile knightTile = {lowestTile.i+dx, lowestTile.j+dy};
+                    placeKnight(board, knightTile);
+                    (*knightCount)++;
+
+                    if ((*knightCount) == MAX_KNIGHTS){
+                        if (checkBoard(*board)){
+                            printf("\nFound a solution:\n");
+                            printBoard(*board);
+                        }
+
+                        memcpy(board, &boardState, BOARD_SIZE*BOARD_SIZE*sizeof(char));
+                        (*knightCount)--;
+
+                        continue;
+                    }
+
+                    backtrack(board, attackMap, knightCount);
+
+                    memcpy(board, &boardState, BOARD_SIZE*BOARD_SIZE*sizeof(char));
+                    (*knightCount)--;
+                }
+            }
+        }
+    }
+}
+
 int main(){
     Board attackMap;
     memset(attackMap, 0, BOARD_SIZE*BOARD_SIZE*sizeof(char));
     generateAttackMap(&attackMap);
-    printBoard(attackMap);
     Board board;
     memset(board, 0, BOARD_SIZE*BOARD_SIZE*sizeof(char));
-    Tile lowestTile = getLowestAttackabilityTile(board, attackMap);
-
-    printf("Lowest i: %d j:%d\n", lowestTile.i, lowestTile.j);
+    int knightCount = 0;
+    backtrack(&board, attackMap, &knightCount);
 }
