@@ -1,3 +1,5 @@
+Benas Budrys 2022
+
 ## 12 dominating knights
 
 > 7) Išdėstyti šachmatų lentoje 12 žirgų, kad kiekvienas langelis būtų kontroliuojamas bent vieno iš jų.
