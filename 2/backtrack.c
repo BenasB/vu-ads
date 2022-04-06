@@ -141,10 +141,10 @@ int main(){
     t = clock();
 
     Board attackMap;
-    memset(attackMap, 0, BOARD_SIZE*BOARD_SIZE*sizeof(char));
+    memset(attackMap, EMPTY_TILE, BOARD_SIZE*BOARD_SIZE*sizeof(char));
     generateAttackMap(&attackMap);
     Board board;
-    memset(board, 0, BOARD_SIZE*BOARD_SIZE*sizeof(char));
+    memset(board, EMPTY_TILE, BOARD_SIZE*BOARD_SIZE*sizeof(char));
     int knightCount = 0;
     backtrack(&board, attackMap, &knightCount);
 
