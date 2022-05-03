@@ -14,5 +14,6 @@ Benas Budrys 5 gr. 2022
 
 Notes about input:
 
+- `customerChance` - in integer %
 - `serviceTime` - in integer time units
 - `bankWorkingTime` - in integer time units
