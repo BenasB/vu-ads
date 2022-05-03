@@ -3,7 +3,7 @@
 #include "pqueue.h"
 
 #define BASIC_CUSTOMER 1
-#define VIP_CUSTOMER 2 // Bigger than BASIC
+#define VIP_CUSTOMER 2 // MUST be bigger than BASIC
 #define NO_CUSTOMER 0
 
 struct Results
@@ -53,9 +53,9 @@ int areAllCashiersFree(Cashier cashiers[], int count)
     return 1;
 }
 
-void printProcessResults(Results *results, int basicCustomerCount, int vipCustomerCount, int overallCustomerCount)
+void printProcessResults(Results *results, int processNo, int overallCustomerCount)
 {
-    printf("----- PROCESS 1 -----\n");
+    printf("----- PROCESS %d -----\n", processNo);
     printf("Overall cashier downtime: %d, overtime: %d\n", results->cashierDowntime, results->cashierOvertime);
 
     double averageBasicCustomerWaitingTime = (results->basicCustomerWaitingTime * 1.0f) / overallCustomerCount;
@@ -66,7 +66,7 @@ void printProcessResults(Results *results, int basicCustomerCount, int vipCustom
     printf("Process score (lower better): %d\n", results->overallScore);
 }
 
-void handleProcessOneCashier(Cashier *cashier, pqueue_t **queue, int *processOneBasicCustomersInQueue, int *processOneVipCustomersInQueue)
+void handleProcessOneCashier(Cashier *cashier, pqueue_t **queue, int *processOneBasicCustomersInQueue, int *processOneVIPCustomersInQueue)
 {
     if (cashier->timeLeft > 0)
     {
@@ -95,18 +95,44 @@ void handleProcessOneCashier(Cashier *cashier, pqueue_t **queue, int *processOne
             break;
 
         case VIP_CUSTOMER:
-            (*processOneVipCustomersInQueue)--;
+            (*processOneVIPCustomersInQueue)--;
             cashier->timeLeft = vipSettings.serviceTime;
             break;
         }
     }
 
-    processOneResults.basicCustomerWaitingTime += *processOneBasicCustomersInQueue;
-    processOneResults.vipCustomerWaitingTime += *processOneVipCustomersInQueue;
-
     if (cashier->customer == NO_CUSTOMER)
     {
         processOneResults.cashierDowntime++;
+    }
+}
+
+void handleProcessTwoCashier(Cashier *cashier, pqueue_t **queue)
+{
+    if (cashier->timeLeft > 0)
+    {
+        // Work
+        cashier->timeLeft--;
+    }
+
+    if (cashier->timeLeft == 0)
+    {
+        // Free up a cashier
+        cashier->customer = NO_CUSTOMER;
+    }
+
+    int error;
+    if (cashier->customer == NO_CUSTOMER && !is_pq_empty(*queue, &error))
+    {
+        // Take a customer out of queue and assign to cashier
+        int *customer = pq_pop(*queue, &error);
+        cashier->customer = *customer;
+        cashier->timeLeft = *customer == VIP_CUSTOMER ? vipSettings.serviceTime : basicSettings.serviceTime;
+    }
+
+    if (cashier->customer == NO_CUSTOMER)
+    {
+        processTwoResults.cashierDowntime++;
     }
 }
 
@@ -126,6 +152,22 @@ void mainCycle(int bankWorkingTime)
     {
         Cashier emptyCashier = {NO_CUSTOMER, 0};
         processOneCashiers[i] = emptyCashier;
+    }
+
+    // Init process two
+    pqueue_t *processTwoBasicQueue = create_pq(&error);
+    pqueue_t *processTwoVIPQueue = create_pq(&error);
+    Cashier processTwoBasicCashiers[basicSettings.cashierCount];
+    for (size_t i = 0; i < basicSettings.cashierCount; i++)
+    {
+        Cashier emptyCashier = {NO_CUSTOMER, 0};
+        processTwoBasicCashiers[i] = emptyCashier;
+    }
+    Cashier processTwoVIPCashiers[vipSettings.cashierCount];
+    for (size_t i = 0; i < vipSettings.cashierCount; i++)
+    {
+        Cashier emptyCashier = {NO_CUSTOMER, 0};
+        processTwoVIPCashiers[i] = emptyCashier;
     }
 
     // Working hours
@@ -155,6 +197,7 @@ void mainCycle(int bankWorkingTime)
             pq_push(processOneQueue, &newCustomer, sizeof(newCustomer), newCustomer, &error);
 
             // Process 2
+            pq_push(newCustomer == BASIC_CUSTOMER ? processTwoBasicQueue : processTwoVIPQueue, &newCustomer, sizeof(newCustomer), newCustomer, &error);
         }
 
         // Handle cashiers
@@ -164,8 +207,20 @@ void mainCycle(int bankWorkingTime)
         {
             handleProcessOneCashier(&(processOneCashiers[i]), &processOneQueue, &processOneBasicCustomersInQueue, &processOneVIPCustomersInQueue);
         }
+        processOneResults.basicCustomerWaitingTime += processOneBasicCustomersInQueue;
+        processOneResults.vipCustomerWaitingTime += processOneVIPCustomersInQueue;
 
         // Process 2
+        for (size_t i = 0; i < vipSettings.cashierCount; i++)
+        {
+            handleProcessTwoCashier(&(processTwoVIPCashiers[i]), &processTwoVIPQueue);
+        }
+        processTwoResults.vipCustomerWaitingTime += pq_elem_count(processTwoVIPQueue, &error);
+        for (size_t i = 0; i < basicSettings.cashierCount; i++)
+        {
+            handleProcessTwoCashier(&(processTwoBasicCashiers[i]), &processTwoBasicQueue);
+        }
+        processTwoResults.basicCustomerWaitingTime += pq_elem_count(processTwoBasicQueue, &error);
     }
 
     // After working hours
@@ -178,17 +233,39 @@ void mainCycle(int bankWorkingTime)
             handleProcessOneCashier(&(processOneCashiers[i]), &processOneQueue, &processOneBasicCustomersInQueue, &processOneVIPCustomersInQueue);
             processOneResults.cashierOvertime++;
         }
+        processOneResults.basicCustomerWaitingTime += processOneBasicCustomersInQueue;
+        processOneResults.vipCustomerWaitingTime += processOneVIPCustomersInQueue;
+    }
+
+    // Process 2
+    while (!areAllCashiersFree(processTwoBasicCashiers, basicSettings.cashierCount) || !areAllCashiersFree(processTwoVIPCashiers, vipSettings.cashierCount))
+    {
+        for (size_t i = 0; i < vipSettings.cashierCount; i++)
+        {
+            handleProcessTwoCashier(&(processTwoVIPCashiers[i]), &processTwoVIPQueue);
+            processTwoResults.cashierOvertime++;
+        }
+        processTwoResults.vipCustomerWaitingTime += pq_elem_count(processTwoVIPQueue, &error);
+        for (size_t i = 0; i < basicSettings.cashierCount; i++)
+        {
+            handleProcessTwoCashier(&(processTwoBasicCashiers[i]), &processTwoBasicQueue);
+            processTwoResults.cashierOvertime++;
+        }
+        processTwoResults.basicCustomerWaitingTime += pq_elem_count(processTwoBasicQueue, &error);
     }
 
     // Process 2
 
     // Cleanup
     free_pq(processOneQueue, &error);
+    free_pq(processTwoBasicQueue, &error);
+    free_pq(processTwoVIPQueue, &error);
 
     // Results
     int overallCustomerCount = basicCustomerCount + vipCustomerCount;
     printf("Served %d basic and %d VIP customers (%d overall)\n", basicCustomerCount, vipCustomerCount, overallCustomerCount);
-    printProcessResults(&processOneResults, basicCustomerCount, vipCustomerCount, overallCustomerCount);
+    printProcessResults(&processOneResults, 1, overallCustomerCount);
+    printProcessResults(&processTwoResults, 2, overallCustomerCount);
 }
 
 int main()
