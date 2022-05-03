@@ -62,7 +62,7 @@ void printProcessResults(Results *results, int processNo, int overallCustomerCou
     double averageVIPCustomerWaitingTime = (results->vipCustomerWaitingTime * 1.0f) / overallCustomerCount;
     printf("Average customer waiting time, BASIC: %lf, VIP: %lf\n", averageBasicCustomerWaitingTime, averageVIPCustomerWaitingTime);
 
-    results->overallScore = results->cashierDowntime + 2 * results->cashierOvertime + 3 * averageBasicCustomerWaitingTime + 5 * averageVIPCustomerWaitingTime;
+    results->overallScore = results->cashierDowntime + 2 * results->cashierOvertime + 5 * averageBasicCustomerWaitingTime + 10 * averageVIPCustomerWaitingTime;
     printf("Process score (lower better): %d\n", results->overallScore);
 }
 
@@ -286,6 +286,19 @@ int main()
     }
 
     fscanf(file, "%d %d", &basicSettings.cashierCount, &vipSettings.cashierCount);
+
+    if (basicSettings.cashierCount <= 0)
+    {
+        printf("Basic cashier count must be above 0\n");
+        return -1;
+    }
+
+    if (vipSettings.cashierCount <= 0)
+    {
+        printf("VIP cashier count must be above 0\n");
+        return -1;
+    }
+
     fscanf(file, "%d %d", &basicSettings.serviceTime, &vipSettings.serviceTime);
 
     int bankWorkingTime;

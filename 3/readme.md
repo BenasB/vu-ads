@@ -20,4 +20,4 @@ Notes about input:
 
 Score calculation:
 
-Overall process score = `cashierDowntime + 2 * cashierOvertime + 3 * averageBasicCustomerWaitingTime + 5 * averageVIPCustomerWaitingTime`
+Overall process score = `cashierDowntime + 2 * cashierOvertime + 5 * averageBasicCustomerWaitingTime + 10 * averageVIPCustomerWaitingTime`
