@@ -10,9 +10,11 @@ struct Results
 {
     int cashierDowntime;
     int cashierOvertime;
-    int allCustomerWaitingTime;
+    int basicCustomerWaitingTime;
+    int vipCustomerWaitingTime;
     int overallScore;
 } processOneResults = {0, 0, 0, 0}, processTwoResults = {0, 0, 0, 0};
+typedef struct Results Results;
 
 struct Cashier
 {
@@ -51,26 +53,24 @@ int areAllCashiersFree(Cashier cashiers[], int count)
     return 1;
 }
 
-void printResults(int basicCustomerCount, int vipCustomerCount)
+void printProcessResults(Results *results, int basicCustomerCount, int vipCustomerCount, int overallCustomerCount)
 {
-    int overallCustomerCount = basicCustomerCount + vipCustomerCount;
-    printf("Served %d basic and %d VIP customers (%d overall)\n", basicCustomerCount, vipCustomerCount, overallCustomerCount);
-
     printf("----- PROCESS 1 -----\n");
-    printf("Overall cashier downtime: %d, overtime: %d\n", processOneResults.cashierDowntime, processOneResults.cashierOvertime);
+    printf("Overall cashier downtime: %d, overtime: %d\n", results->cashierDowntime, results->cashierOvertime);
 
-    double averageCustomerWaitingTime = (processOneResults.allCustomerWaitingTime * 1.0f) / overallCustomerCount;
-    printf("Average customer waiting time: %lf\n", averageCustomerWaitingTime);
+    double averageBasicCustomerWaitingTime = (results->basicCustomerWaitingTime * 1.0f) / overallCustomerCount;
+    double averageVIPCustomerWaitingTime = (results->vipCustomerWaitingTime * 1.0f) / overallCustomerCount;
+    printf("Average customer waiting time, BASIC: %lf, VIP: %lf\n", averageBasicCustomerWaitingTime, averageVIPCustomerWaitingTime);
 
-    processOneResults.overallScore = processOneResults.cashierDowntime + 2 * processOneResults.cashierOvertime + 3 * averageCustomerWaitingTime;
-    printf("Process score (lower better): %d\n", processOneResults.overallScore);
+    results->overallScore = results->cashierDowntime + 2 * results->cashierOvertime + 3 * averageBasicCustomerWaitingTime + 5 * averageVIPCustomerWaitingTime;
+    printf("Process score (lower better): %d\n", results->overallScore);
 }
 
-void handleProcessOneCashier(Cashier *cashier, pqueue_t **queue)
+void handleProcessOneCashier(Cashier *cashier, pqueue_t **queue, int *processOneBasicCustomersInQueue, int *processOneVipCustomersInQueue)
 {
     if (cashier->timeLeft > 0)
     {
-        // Keep working
+        // Work
         cashier->timeLeft--;
     }
 
@@ -83,13 +83,26 @@ void handleProcessOneCashier(Cashier *cashier, pqueue_t **queue)
     int error;
     if (cashier->customer == NO_CUSTOMER && !is_pq_empty(*queue, &error))
     {
+        // Take a customer out of queue and assign to cashier
         int *customer = pq_pop(*queue, &error);
         cashier->customer = *customer;
-        cashier->timeLeft = *customer == VIP_CUSTOMER ? vipSettings.serviceTime : basicSettings.serviceTime;
+
+        switch (*customer)
+        {
+        case BASIC_CUSTOMER:
+            (*processOneBasicCustomersInQueue)--;
+            cashier->timeLeft = basicSettings.serviceTime;
+            break;
+
+        case VIP_CUSTOMER:
+            (*processOneVipCustomersInQueue)--;
+            cashier->timeLeft = vipSettings.serviceTime;
+            break;
+        }
     }
 
-    size_t customersInQueueCount = pq_elem_count(*queue, &error);
-    processOneResults.allCustomerWaitingTime += customersInQueueCount;
+    processOneResults.basicCustomerWaitingTime += *processOneBasicCustomersInQueue;
+    processOneResults.vipCustomerWaitingTime += *processOneVipCustomersInQueue;
 
     if (cashier->customer == NO_CUSTOMER)
     {
@@ -106,6 +119,8 @@ void mainCycle(int bankWorkingTime)
     // Init process one
     pqueue_t *processOneQueue = create_pq(&error);
     int processOneCashierCount = basicSettings.cashierCount + vipSettings.cashierCount;
+    int processOneBasicCustomersInQueue = 0;
+    int processOneVIPCustomersInQueue = 0;
     Cashier processOneCashiers[processOneCashierCount];
     for (size_t i = 0; i < processOneCashierCount; i++)
     {
@@ -125,10 +140,12 @@ void mainCycle(int bankWorkingTime)
             {
             case BASIC_CUSTOMER:
                 basicCustomerCount++;
+                processOneBasicCustomersInQueue++;
                 break;
 
             case VIP_CUSTOMER:
                 vipCustomerCount++;
+                processOneVIPCustomersInQueue++;
                 break;
             }
 
@@ -145,7 +162,7 @@ void mainCycle(int bankWorkingTime)
         // Process 1
         for (size_t i = 0; i < processOneCashierCount; i++)
         {
-            handleProcessOneCashier(&(processOneCashiers[i]), &processOneQueue);
+            handleProcessOneCashier(&(processOneCashiers[i]), &processOneQueue, &processOneBasicCustomersInQueue, &processOneVIPCustomersInQueue);
         }
 
         // Process 2
@@ -158,14 +175,20 @@ void mainCycle(int bankWorkingTime)
     {
         for (size_t i = 0; i < processOneCashierCount; i++)
         {
-            handleProcessOneCashier(&(processOneCashiers[i]), &processOneQueue);
+            handleProcessOneCashier(&(processOneCashiers[i]), &processOneQueue, &processOneBasicCustomersInQueue, &processOneVIPCustomersInQueue);
             processOneResults.cashierOvertime++;
         }
     }
 
     // Process 2
 
-    printResults(basicCustomerCount, vipCustomerCount);
+    // Cleanup
+    free_pq(processOneQueue, &error);
+
+    // Results
+    int overallCustomerCount = basicCustomerCount + vipCustomerCount;
+    printf("Served %d basic and %d VIP customers (%d overall)\n", basicCustomerCount, vipCustomerCount, overallCustomerCount);
+    printProcessResults(&processOneResults, basicCustomerCount, vipCustomerCount, overallCustomerCount);
 }
 
 int main()

@@ -17,3 +17,7 @@ Notes about input:
 - `customerChance` - in integer %
 - `serviceTime` - in integer time units
 - `bankWorkingTime` - in integer time units
+
+Score calculation:
+
+Overall process score = `cashierDowntime + 2 * cashierOvertime + 3 * averageBasicCustomerWaitingTime + 5 * averageVIPCustomerWaitingTime`
