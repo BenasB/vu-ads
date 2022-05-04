@@ -1,3 +1,5 @@
+// Benas Budrys 5 gr.
+
 #include <stdio.h>
 #include <time.h>
 #include "pqueue.h"
@@ -53,13 +55,13 @@ int areAllCashiersFree(Cashier cashiers[], int count)
     return 1;
 }
 
-void printProcessResults(Results *results, int processNo, int overallCustomerCount)
+void printProcessResults(Results *results, int processNo, int basicCustomerCount, int vipCustomerCount)
 {
     printf("----- PROCESS %d -----\n", processNo);
     printf("Overall cashier downtime: %d, overtime: %d\n", results->cashierDowntime, results->cashierOvertime);
 
-    double averageBasicCustomerWaitingTime = (results->basicCustomerWaitingTime * 1.0f) / overallCustomerCount;
-    double averageVIPCustomerWaitingTime = (results->vipCustomerWaitingTime * 1.0f) / overallCustomerCount;
+    double averageBasicCustomerWaitingTime = (results->basicCustomerWaitingTime * 1.0f) / basicCustomerCount;
+    double averageVIPCustomerWaitingTime = (results->vipCustomerWaitingTime * 1.0f) / vipCustomerCount;
     printf("Average customer waiting time, BASIC: %lf, VIP: %lf\n", averageBasicCustomerWaitingTime, averageVIPCustomerWaitingTime);
 
     results->overallScore = results->cashierDowntime + 2 * results->cashierOvertime + 5 * averageBasicCustomerWaitingTime + 10 * averageVIPCustomerWaitingTime;
@@ -264,8 +266,8 @@ void mainCycle(int bankWorkingTime)
     // Results
     int overallCustomerCount = basicCustomerCount + vipCustomerCount;
     printf("Served %d basic and %d VIP customers (%d overall)\n", basicCustomerCount, vipCustomerCount, overallCustomerCount);
-    printProcessResults(&processOneResults, 1, overallCustomerCount);
-    printProcessResults(&processTwoResults, 2, overallCustomerCount);
+    printProcessResults(&processOneResults, 1, basicCustomerCount, vipCustomerCount);
+    printProcessResults(&processTwoResults, 2, basicCustomerCount, vipCustomerCount);
 }
 
 int main()
