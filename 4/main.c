@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include "queue.h"
 
-#define NON_NODE -1 // Arbitrary number that can
+#define NON_NODE -1
 
 struct QueueElement
 {
